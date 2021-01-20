@@ -2,7 +2,6 @@
 
 from flask import Flask, url_for, render_template, request, redirect, session, abort
 from flask_sqlalchemy import SQLAlchemy
-from instagram import getfollowedby, getname
 
 
 app = Flask(__name__)
