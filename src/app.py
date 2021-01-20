@@ -8,15 +8,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 db = SQLAlchemy(app)
 
-
-def logged_in(func):
-    def wrapper(*args, **kwargs):
-        if not "logged_in" in session or not session["logged_in"]:
-            abort(403)
-        return func(*args, **kwargs)
-    return wrapper
-
-
 class User(db.Model):
     """ Create user table"""
     id = db.Column(db.Integer, primary_key=True)
@@ -26,6 +17,17 @@ class User(db.Model):
     def __init__(self, username, password):
         self.username = username
         self.password = password
+
+
+
+
+def logged_in(func):
+    def wrapper(*args, **kwargs):
+        if not "logged_in" in session or not session["logged_in"]:
+            abort(403)
+        return func(*args, **kwargs)
+    return wrapper
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -54,20 +56,20 @@ def login():
                 session['logged_in'] = True
                 return redirect(url_for('home'))
             else:
-                return 'Dont Login'
+                return 'wrong username or password'
         except:
-            return "Dont Login"
+            return "wrong username or password"
 
 
-@app.route('/register/', methods=['POST'])
-def register():
-    """Register Form"""
-    new_user = User(
-        username=request.form['username'],
-        password=request.form['password'])
-    db.session.add(new_user)
-    db.session.commit()
-    return render_template('login.html')
+# @app.route('/register/', methods=['POST'])
+# def register():
+#     """Register Form"""
+#     new_user = User(
+#         username=request.form['username'],
+#         password=request.form['password'])
+#     db.session.add(new_user)
+#     db.session.commit()
+#     return render_template('login.html')
 
 
 @app.route("/logout")
@@ -80,6 +82,13 @@ def logout():
 if __name__ == '__main__':
     app.debug = True
     db.create_all()
+    new_user = User(
+        username="123",
+        password="123"
+    )
+    db.session.add(new_user)
+    # db.session.commit()
+
     app.secret_key = "123"
     app.run(host='0.0.0.0')
     
