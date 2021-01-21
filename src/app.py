@@ -35,12 +35,11 @@ def logged_in(func):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     """ Session control"""
+    if not User.query.all(): # no users at all
+        return render_template("register.html")
     if not session.get('logged_in'):
         return render_template('login.html')
     else:
-        if request.method == 'POST':
-            username = getname(request.form['username'])
-            return render_template('index.html', data=getfollowedby(username))
         return render_template('index.html')
 
 
@@ -56,6 +55,7 @@ def login():
         try:
             data = User.query.filter_by(username=name).first()
             if data is not None and bcrypt.checkpw(passw.encode(), data.password.encode()):
+                
                 session['logged_in'] = True
                 return redirect(url_for('home'))
             else:
@@ -64,13 +64,14 @@ def login():
             print(e)
             return "wrong username or password"
         finally:
-            breakpoint()
             del passw
 
 
 
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
+    if User.query.all():
+        abort(403)
     """Register Form"""
     if request.method == 'POST':
         new_user = User(
