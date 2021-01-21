@@ -1,22 +1,24 @@
-"""Flask Login Example and instagram fallowing find"""
-
 from flask import Flask, url_for, render_template, request, redirect, session, abort
 from flask_sqlalchemy import SQLAlchemy
-
+import bcrypt
+import uuid
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = uuid.uuid4().hex
 db = SQLAlchemy(app)
+
 
 class User(db.Model):
     """ Create user table"""
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True)
-    password = db.Column(db.String(80))
+    username = db.Column(db.String, unique=True)
+    password = db.Column(db.String)
 
     def __init__(self, username, password):
         self.username = username
-        self.password = password
+        self.password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode() # Hash password using bcrypt
 
 
 
@@ -50,15 +52,36 @@ def login():
     else:
         name = request.form['username']
         passw = request.form['password']
+
         try:
-            data = User.query.filter_by(username=name, password=passw).first()
-            if data is not None:
+            data = User.query.filter_by(username=name).first()
+            if data is not None and bcrypt.checkpw(passw.encode(), data.password.encode()):
                 session['logged_in'] = True
                 return redirect(url_for('home'))
             else:
                 return 'wrong username or password'
-        except:
+        except Exception as e:
+            print(e)
             return "wrong username or password"
+        finally:
+            breakpoint()
+            del passw
+
+
+
+@app.route('/register/', methods=['GET', 'POST'])
+def register():
+    """Register Form"""
+    if request.method == 'POST':
+        new_user = User(
+            username=request.form['username'],
+            password=request.form['password']
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return render_template('login.html')
+    return render_template('register.html')
+
 
 
 # @app.route('/register/', methods=['POST'])
@@ -80,15 +103,8 @@ def logout():
 
 
 if __name__ == '__main__':
+
     app.debug = True
     db.create_all()
-    new_user = User(
-        username="123",
-        password="123"
-    )
-    db.session.add(new_user)
-    # db.session.commit()
-
-    app.secret_key = "123"
     app.run(host='0.0.0.0')
     
