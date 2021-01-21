@@ -32,6 +32,11 @@ def logged_in(func):
 
 
 
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     """ Session control"""
