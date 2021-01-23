@@ -34,3 +34,19 @@ ul_container.on('scroll', function() {
 })
 
 
+const load_api_data = async function() {
+  var result = await fetch("http://localhost:8000/scanners")
+  result = await result.json()
+  return result
+}
+
+
+var load_events_from_api = async function(limit) {
+  var data = await load_api_data()
+  for (const [index, element] of data.entries()) {
+    if (index > limit) {
+      break
+    }
+    add_li_element(element.ip, element.time, element.ports)
+  }
+}
